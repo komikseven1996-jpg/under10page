@@ -41,7 +41,7 @@
 
   <!-- Fonts + JSZip library used by the tool -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
   :root{
@@ -65,20 +65,8 @@
     position:relative;
   }
 
-  /* ── Animated gradient-blob backdrop ─────────── */
-  .bg-blobs{position:fixed;inset:0;z-index:-1;overflow:hidden;background:
-    linear-gradient(160deg,#0f0c29 0%,#1b1440 45%,#2a1a4d 100%);}
-  .blob{position:absolute;border-radius:50%;filter:blur(70px);opacity:.55;}
-  .blob.b1{width:480px;height:480px;background:radial-gradient(circle,var(--accent),transparent 70%);
-    top:-120px;left:-100px;animation:float1 18s ease-in-out infinite;}
-  .blob.b2{width:520px;height:520px;background:radial-gradient(circle,var(--accent2),transparent 70%);
-    bottom:-160px;right:-120px;animation:float2 22s ease-in-out infinite;}
-  .blob.b3{width:360px;height:360px;background:radial-gradient(circle,#9b5de5,transparent 70%);
-    top:40%;left:60%;animation:float3 26s ease-in-out infinite;}
-  @keyframes float1{0%,100%{transform:translate(0,0);}50%{transform:translate(60px,50px);}}
-  @keyframes float2{0%,100%{transform:translate(0,0);}50%{transform:translate(-50px,-40px);}}
-  @keyframes float3{0%,100%{transform:translate(0,0);}50%{transform:translate(-40px,60px);}}
-  @media (prefers-reduced-motion: reduce){.blob{animation:none;}}
+  /* ── Subtle static gradient backdrop ──────────── */
+  body{background:linear-gradient(160deg,#0f0c29 0%,#1b1440 45%,#2a1a4d 100%);}
 
   .wrap{max-width:1040px;margin:0 auto;padding:28px 20px 80px;}
 
@@ -95,8 +83,7 @@
     color:var(--accent2);font-weight:700;
   }
   h1{
-    font-family:'Bebas Neue',sans-serif;
-    font-size:52px;letter-spacing:.02em;line-height:.9;margin:2px 0 0;
+    font-size:52px;font-weight:800;letter-spacing:-.02em;line-height:.9;margin:2px 0 0;
     background:linear-gradient(100deg,#fff, var(--accent2) 60%, var(--accent));
     -webkit-background-clip:text;background-clip:text;color:transparent;
   }
@@ -144,7 +131,7 @@
     transition:background .15s ease, border-color .15s ease;
   }
   .drop:hover, .drop.dragover{background:rgba(255,94,168,0.14);border-color:var(--accent);}
-  .drop h2{font-family:'Bebas Neue',sans-serif;font-size:30px;margin:0 0 6px;letter-spacing:.02em;color:#fff;}
+  .drop h2{font-size:26px;font-weight:700;margin:0 0 6px;letter-spacing:-.01em;color:#fff;}
   .drop p{margin:0;color:var(--dim);font-size:13.5px;}
   .drop .icon{font-size:34px;margin-bottom:10px;display:block;}
   input[type=file]{display:none;}
@@ -198,20 +185,10 @@
   .status-tag.wait{color:var(--dim);border-color:var(--glass-border);}
   .status-tag.run{color:var(--accent2);border-color:var(--accent2);}
 
-  /* ── Output gallery ───────────────────────── */
-  .chapter-group{margin-bottom:26px;}
-  .chapter-group h3{
-    font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.01em;color:#fff;
-    margin:0 0 4px;display:flex;align-items:center;gap:10px;
-  }
-  .chapter-group h3 span{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);text-transform:none;letter-spacing:0;}
-  .thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px;}
-  .thumb{border:1px solid var(--glass-border);background:rgba(255,255,255,0.05);border-radius:12px;overflow:hidden;position:relative;}
-  .thumb img{width:100%;display:block;}
-  .thumb .badge{
-    position:absolute;bottom:0;left:0;right:0;background:rgba(15,12,41,.75);color:#fff;
-    font-family:'JetBrains Mono',monospace;font-size:9.5px;padding:3px 5px;
-    display:flex;justify-content:space-between;backdrop-filter:blur(4px);
+  /* ── Result summary ───────────────────────── */
+  .result-summary{
+    font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ok);
+    padding:8px 0;line-height:1.6;
   }
 
   .log{
@@ -239,7 +216,7 @@
 </style>
 </head>
 <body>
-<div class="bg-blobs"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
+
 <div class="wrap">
 
   <header>
@@ -321,7 +298,7 @@
   <div class="panel" id="outputPanel" style="display:none;">
     <span class="panel-label" data-i18n="panel03">03 — Result</span>
     <div class="panel-inner">
-      <div id="outputGallery"></div>
+      <div id="resultSummary" class="result-summary"></div>
       <div class="pickrow" style="margin-top:10px;">
         <button class="primary" id="btnDownloadZip" disabled data-i18n="btnDownloadZip">⬇ Download All (.zip)</button>
       </div>
@@ -386,6 +363,7 @@ const I18N = {
     logAllDone:'All chapters processed.',
     logZipPrep:'Preparing ZIP file…',
     logZipReady:'ZIP ready to download.',
+    resultSummary:(chDone,total)=>`✔ ${chDone} chapter(s) processed — ${total} output page(s) ready. ZIP downloaded automatically.`,
   },
   id: {
     eyebrow:'Komiku.pro — Alat Gratis',
@@ -425,6 +403,7 @@ const I18N = {
     logAllDone:'Semua chapter selesai diproses.',
     logZipPrep:'Menyiapkan file ZIP…',
     logZipReady:'ZIP siap diunduh.',
+    resultSummary:(chDone,total)=>`✔ ${chDone} chapter diselesaikan — ${total} halaman output siap. ZIP diunduh otomatis.`,
   }
 };
 
@@ -462,7 +441,7 @@ const btnProcess = document.getElementById('btnProcess');
 const btnClear   = document.getElementById('btnClear');
 const btnDownloadZip = document.getElementById('btnDownloadZip');
 const outputPanel= document.getElementById('outputPanel');
-const outputGallery = document.getElementById('outputGallery');
+const resultSummary = document.getElementById('resultSummary');
 const logBox     = document.getElementById('logBox');
 
 function log(msg, isErr){
@@ -623,7 +602,7 @@ function walkEntry(entry, prefix, out){
 
 btnClear.addEventListener('click', () => {
   chapters = [];
-  outputGallery.innerHTML = '';
+  resultSummary.textContent = '';
   outputPanel.style.display = 'none';
   btnDownloadZip.disabled = true;
   logBox.innerHTML = '';
@@ -756,38 +735,15 @@ btnProcess.addEventListener('click', async () => {
   }
 
   log(dict.logAllDone);
-  renderGallery();
+  showResult();
   btnProcess.disabled = false;
   btnClear.disabled = false;
-  btnDownloadZip.disabled = false;
 });
 
 /* ─────────────────────────────────────────────────────────
-   Output gallery + zip download
+   Output summary + auto / manual zip download
 ───────────────────────────────────────────────────────── */
-function renderGallery(){
-  outputPanel.style.display = 'block';
-  outputGallery.innerHTML = '';
-  for(const ch of chapters){
-    if(!ch.outputPages.length) continue;
-    const group = document.createElement('div');
-    group.className = 'chapter-group';
-    group.innerHTML = `<h3>${ch.name} <span>${ch.files.length} raw → ${ch.outputPages.length} pages</span></h3>`;
-    const thumbs = document.createElement('div');
-    thumbs.className = 'thumbs';
-    for(const p of ch.outputPages){
-      const url = URL.createObjectURL(p.blob);
-      const div = document.createElement('div');
-      div.className = 'thumb';
-      div.innerHTML = `<img src="${url}" loading="lazy"><div class="badge"><span>${p.index}.${p.ext}</span><span>${p.sizeMB.toFixed(1)}MB</span></div>`;
-      thumbs.appendChild(div);
-    }
-    group.appendChild(thumbs);
-    outputGallery.appendChild(group);
-  }
-}
-
-btnDownloadZip.addEventListener('click', async () => {
+async function downloadAllZip(){
   const dict = I18N[currentLang];
   log(dict.logZipPrep);
   const zip = new JSZip();
@@ -806,7 +762,20 @@ btnDownloadZip.addEventListener('click', async () => {
   a.click();
   a.remove();
   log(dict.logZipReady);
-});
+}
+
+function showResult(){
+  outputPanel.style.display = 'block';
+  const summary = document.getElementById('resultSummary');
+  const total = chapters.reduce((s,ch) => s + ch.outputPages.length, 0);
+  const chDone = chapters.filter(ch => ch.outputPages.length > 0).length;
+  summary.textContent = dict.resultSummary(chDone, total);
+  btnDownloadZip.disabled = false;
+  // auto-download
+  downloadAllZip();
+}
+
+btnDownloadZip.addEventListener('click', downloadAllZip);
 
 /* init: default language is English */
 applyLang('en');
