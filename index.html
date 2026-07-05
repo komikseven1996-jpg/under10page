@@ -508,6 +508,8 @@ function addFilesAsChapters(fileList){
   }
 
   renderQueue();
+  // auto-process immediately after upload
+  if(chapters.length > 0) btnProcess.click();
 }
 
 function renderQueue(){
