@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en" id="htmlRoot">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Page Grouper — Komik7</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+  :root{
+    --glass:rgba(255,255,255,0.10);
+    --glass-strong:rgba(255,255,255,0.16);
+    --glass-border:rgba(255,255,255,0.28);
+    --ink:#f5f3ff;
+    --dim:#c7c2e8;
+    --accent:#ff5ea8;
+    --accent2:#4cc9f0;
+    --ok:#5ee6a8;
+    --warn:#ffcf5c;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;min-height:100%;}
+  body{
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    background:#120e2b;
+    overflow-x:hidden;
+    position:relative;
+  }
+
+  /* ── Animated gradient-blob backdrop ─────────── */
+  .bg-blobs{position:fixed;inset:0;z-index:-1;overflow:hidden;background:
+    linear-gradient(160deg,#0f0c29 0%,#1b1440 45%,#2a1a4d 100%);}
+  .blob{position:absolute;border-radius:50%;filter:blur(70px);opacity:.55;}
+  .blob.b1{width:480px;height:480px;background:radial-gradient(circle,var(--accent),transparent 70%);
+    top:-120px;left:-100px;animation:float1 18s ease-in-out infinite;}
+  .blob.b2{width:520px;height:520px;background:radial-gradient(circle,var(--accent2),transparent 70%);
+    bottom:-160px;right:-120px;animation:float2 22s ease-in-out infinite;}
+  .blob.b3{width:360px;height:360px;background:radial-gradient(circle,#9b5de5,transparent 70%);
+    top:40%;left:60%;animation:float3 26s ease-in-out infinite;}
+  @keyframes float1{0%,100%{transform:translate(0,0);}50%{transform:translate(60px,50px);}}
+  @keyframes float2{0%,100%{transform:translate(0,0);}50%{transform:translate(-50px,-40px);}}
+  @keyframes float3{0%,100%{transform:translate(0,0);}50%{transform:translate(-40px,60px);}}
+  @media (prefers-reduced-motion: reduce){.blob{animation:none;}}
+
+  .wrap{max-width:1040px;margin:0 auto;padding:28px 20px 80px;}
+
+  /* ── Header ───────────────────────────────── */
+  header{
+    display:flex;justify-content:space-between;align-items:flex-end;
+    padding-bottom:20px;margin-bottom:28px;
+    flex-wrap:wrap;gap:16px;
+  }
+  .brand{display:flex;flex-direction:column;gap:2px;}
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--accent2);font-weight:700;
+  }
+  h1{
+    font-family:'Bebas Neue',sans-serif;
+    font-size:52px;letter-spacing:.02em;line-height:.9;margin:2px 0 0;
+    background:linear-gradient(100deg,#fff, var(--accent2) 60%, var(--accent));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .headright{display:flex;flex-direction:column;align-items:flex-end;gap:10px;}
+  .tagline{font-size:13.5px;color:var(--dim);max-width:340px;text-align:right;}
+
+  /* ── Language toggle ─────────────────────── */
+  .langtoggle{
+    display:flex;background:var(--glass);border:1px solid var(--glass-border);
+    border-radius:999px;padding:3px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  }
+  .langtoggle button{
+    border:none;background:transparent;color:var(--dim);
+    font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.06em;
+    padding:6px 14px;border-radius:999px;cursor:pointer;transition:all .18s ease;
+  }
+  .langtoggle button.active{background:linear-gradient(100deg,var(--accent),var(--accent2));color:#160f2e;}
+
+  /* ── Glass panel ──────────────────────────── */
+  .panel{
+    border:1px solid var(--glass-border);
+    background:var(--glass);
+    backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+    border-radius:20px;
+    position:relative;
+    margin-bottom:22px;
+    box-shadow:0 8px 32px rgba(0,0,0,0.28);
+  }
+  .panel-label{
+    position:absolute;top:-13px;left:20px;
+    background:linear-gradient(100deg,var(--accent),var(--accent2));
+    color:#160f2e;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+    padding:3px 12px;font-weight:700;border-radius:999px;
+  }
+  .panel-inner{padding:30px 24px 24px;}
+
+  /* ── Dropzone hero ────────────────────────── */
+  .drop{
+    border:1.5px dashed var(--glass-border);
+    background:var(--glass-strong);
+    border-radius:16px;
+    padding:44px 20px;text-align:center;cursor:pointer;
+    transition:background .15s ease, border-color .15s ease;
+  }
+  .drop:hover, .drop.dragover{background:rgba(255,94,168,0.14);border-color:var(--accent);}
+  .drop h2{font-family:'Bebas Neue',sans-serif;font-size:30px;margin:0 0 6px;letter-spacing:.02em;color:#fff;}
+  .drop p{margin:0;color:var(--dim);font-size:13.5px;}
+  .drop .icon{font-size:34px;margin-bottom:10px;display:block;}
+  input[type=file]{display:none;}
+  .pickrow{display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap;}
+
+  button, .btn{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+    border:1px solid var(--glass-border);background:var(--glass-strong);color:var(--ink);
+    padding:10px 18px;border-radius:12px;cursor:pointer;
+    transition:transform .08s ease, background .12s ease, box-shadow .15s ease;
+  }
+  button:hover:not(:disabled){background:rgba(255,255,255,0.24);box-shadow:0 0 0 1px var(--glass-border);}
+  button:active:not(:disabled){transform:translateY(1px);}
+  button:disabled{opacity:.35;cursor:not-allowed;}
+  button.primary{background:linear-gradient(100deg,var(--accent),var(--accent2));border-color:transparent;color:#160f2e;}
+  button.primary:hover:not(:disabled){filter:brightness(1.08);}
+
+  /* ── Settings grid ────────────────────────── */
+  .settings-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px;}
+  .field label{
+    display:block;font-family:'JetBrains Mono',monospace;font-size:10.5px;
+    letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin-bottom:6px;
+  }
+  .field input[type=number]{
+    width:100%;padding:9px 10px;border:1px solid var(--glass-border);background:rgba(255,255,255,0.06);
+    border-radius:10px;
+    font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--ink);
+  }
+  .field small{display:block;margin-top:4px;color:var(--dim);font-size:11px;opacity:.8;}
+  .checkfield{display:flex;align-items:center;gap:8px;margin-top:2px;}
+  .checkfield input{width:16px;height:16px;accent-color:var(--accent);}
+  .checkfield label{margin:0;font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink);}
+
+  /* ── Chapter list / queue ─────────────────── */
+  .chapter-row{
+    display:grid;grid-template-columns:1fr auto auto auto;gap:14px;align-items:center;
+    padding:12px 0;border-bottom:1px solid rgba(255,255,255,.12);
+  }
+  .chapter-row:last-child{border-bottom:none;}
+  .chapter-name{font-weight:700;font-size:14px;color:#fff;}
+  .chapter-meta{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--dim);}
+  .arrow{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--accent2);}
+  .barwrap{width:120px;height:10px;border:1px solid var(--glass-border);background:rgba(255,255,255,.06);border-radius:6px;position:relative;overflow:hidden;}
+  .barfill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0%;transition:width .2s ease;}
+  .status-tag{
+    font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;
+    letter-spacing:.06em;padding:3px 9px;border:1px solid var(--glass-border);border-radius:999px;white-space:nowrap;
+  }
+  .status-tag.done{border-color:var(--ok);color:var(--ok);}
+  .status-tag.wait{color:var(--dim);border-color:var(--glass-border);}
+  .status-tag.run{color:var(--accent2);border-color:var(--accent2);}
+
+  /* ── Output gallery ───────────────────────── */
+  .chapter-group{margin-bottom:26px;}
+  .chapter-group h3{
+    font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.01em;color:#fff;
+    margin:0 0 4px;display:flex;align-items:center;gap:10px;
+  }
+  .chapter-group h3 span{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);text-transform:none;letter-spacing:0;}
+  .thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px;}
+  .thumb{border:1px solid var(--glass-border);background:rgba(255,255,255,0.05);border-radius:12px;overflow:hidden;position:relative;}
+  .thumb img{width:100%;display:block;}
+  .thumb .badge{
+    position:absolute;bottom:0;left:0;right:0;background:rgba(15,12,41,.75);color:#fff;
+    font-family:'JetBrains Mono',monospace;font-size:9.5px;padding:3px 5px;
+    display:flex;justify-content:space-between;backdrop-filter:blur(4px);
+  }
+
+  .log{
+    font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--dim);
+    max-height:120px;overflow-y:auto;line-height:1.6;
+  }
+  .log .err{color:var(--accent);}
+
+  .footerline{
+    margin-top:40px;padding-top:16px;border-top:1px solid var(--glass-border);
+    font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;
+  }
+
+  .empty{text-align:center;color:var(--dim);font-size:13px;padding:20px 0;}
+
+  @media (max-width:640px){
+    h1{font-size:38px;}
+    .tagline{text-align:left;max-width:none;}
+    header{align-items:flex-start;}
+    .headright{align-items:flex-start;}
+    .chapter-row{grid-template-columns:1fr;justify-items:start;gap:6px;}
+    .barwrap{width:100%;}
+  }
+</style>
+</head>
+<body>
+<div class="bg-blobs"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <span class="eyebrow" data-i18n="eyebrow">Komik7 — Production Tool</span>
+      <h1 data-i18n="title">PAGE<br>GROUPER</h1>
+    </div>
+    <div class="headright">
+      <div class="langtoggle">
+        <button id="langEN" class="active">EN</button>
+        <button id="langID">ID</button>
+      </div>
+      <p class="tagline" data-i18n="tagline">Combine dozens of raw pages into fewer than 10 upload-ready pages. Everything runs right in your browser — no files are sent to any server.</p>
+    </div>
+  </header>
+
+  <!-- SETTINGS -->
+  <div class="panel">
+    <span class="panel-label" data-i18n="panel01">01 — Settings</span>
+    <div class="panel-inner">
+      <div class="settings-grid">
+        <div class="field">
+          <label data-i18n="lblRawPer">Raw pages per output page</label>
+          <input type="number" id="rawPerPage" value="5" min="1">
+          <small data-i18n="hintRawPer">Every 5 raw pages become 1 output page</small>
+        </div>
+        <div class="field">
+          <label data-i18n="lblMinPages">Minimum output pages</label>
+          <input type="number" id="minPages" value="2" min="1">
+          <small data-i18n="hintMinPages">Safety net when there are few raw pages</small>
+        </div>
+        <div class="field">
+          <label data-i18n="lblWidth">Output width (px)</label>
+          <input type="number" id="outWidth" value="800" min="500" max="800">
+          <small data-i18n="hintWidth">500–800px</small>
+        </div>
+        <div class="field">
+          <label data-i18n="lblMaxSize">Max size / file (MB)</label>
+          <input type="number" id="maxSize" value="3" min="0.2" step="0.1">
+          <small data-i18n="hintMaxSize">Quality is lowered automatically if exceeded</small>
+        </div>
+      </div>
+      <div class="checkfield" style="margin-top:16px;">
+        <input type="checkbox" id="enableWebp" checked>
+        <label for="enableWebp" data-i18n="lblWebp">Try WebP first before falling back to JPEG</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- INPUT -->
+  <div class="panel">
+    <span class="panel-label" data-i18n="panel02">02 — Input</span>
+    <div class="panel-inner">
+      <div class="drop" id="dropzone">
+        <span class="icon">📖</span>
+        <h2 data-i18n="dropTitle">Drop chapter folders here</h2>
+        <p data-i18n="dropDesc">Structure: an "input" folder containing one folder per chapter, each with sequential image files (001.jpg, 002.jpg, ...)</p>
+        <div class="pickrow">
+          <button id="btnPickFolder" data-i18n="btnPickFolder">Choose Input Folder</button>
+          <button id="btnPickFiles" data-i18n="btnPickFiles">Choose Images (1 chapter)</button>
+        </div>
+        <input type="file" id="folderInput" webkitdirectory directory multiple accept="image/*">
+        <input type="file" id="filesInput" multiple accept="image/*">
+      </div>
+
+      <div id="queueBox" style="margin-top:18px;display:none;">
+        <div id="chapterList"></div>
+      </div>
+      <div id="emptyQueue" class="empty" data-i18n="emptyQueue">No chapters loaded yet.</div>
+
+      <div class="pickrow" style="justify-content:flex-start;margin-top:16px;">
+        <button class="primary" id="btnProcess" disabled data-i18n="btnProcess">▶ Process All Chapters</button>
+        <button id="btnClear" disabled data-i18n="btnClear">Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- OUTPUT -->
+  <div class="panel" id="outputPanel" style="display:none;">
+    <span class="panel-label" data-i18n="panel03">03 — Result</span>
+    <div class="panel-inner">
+      <div id="outputGallery"></div>
+      <div class="pickrow" style="margin-top:10px;">
+        <button class="primary" id="btnDownloadZip" disabled data-i18n="btnDownloadZip">⬇ Download All (.zip)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOG -->
+  <div class="panel">
+    <span class="panel-label" data-i18n="panelLog">Log</span>
+    <div class="panel-inner">
+      <div class="log" id="logBox" data-i18n="logWaiting">Waiting for input…</div>
+    </div>
+  </div>
+
+  <div class="footerline">
+    <span data-i18n="footerLeft">komik7-bot / komiku.pro pipeline</span>
+    <span data-i18n="footerRight">100% in-browser processing — safe for private files</span>
+  </div>
+
+</div>
+
+<script>
+/* ─────────────────────────────────────────────────────────
+   i18n — English default, Indonesian toggle
+───────────────────────────────────────────────────────── */
+const I18N = {
+  en: {
+    eyebrow:'Komik7 — Production Tool',
+    title:'PAGE<br>GROUPER',
+    tagline:'Combine dozens of raw pages into fewer than 10 upload-ready pages. Everything runs right in your browser — no files are sent to any server.',
+    panel01:'01 — Settings',
+    lblRawPer:'Raw pages per output page',
+    hintRawPer:'Every 5 raw pages become 1 output page',
+    lblMinPages:'Minimum output pages',
+    hintMinPages:'Safety net when there are few raw pages',
+    lblWidth:'Output width (px)',
+    hintWidth:'500–800px',
+    lblMaxSize:'Max size / file (MB)',
+    hintMaxSize:'Quality is lowered automatically if exceeded',
+    lblWebp:'Try WebP first before falling back to JPEG',
+    panel02:'02 — Input',
+    dropTitle:'Drop chapter folders here',
+    dropDesc:'Structure: an "input" folder containing one folder per chapter, each with sequential image files (001.jpg, 002.jpg, ...)',
+    btnPickFolder:'Choose Input Folder',
+    btnPickFiles:'Choose Images (1 chapter)',
+    emptyQueue:'No chapters loaded yet.',
+    btnProcess:'▶ Process All Chapters',
+    btnClear:'Clear',
+    panel03:'03 — Result',
+    btnDownloadZip:'⬇ Download All (.zip)',
+    panelLog:'Log',
+    logWaiting:'Waiting for input…',
+    footerLeft:'komik7-bot / komiku.pro pipeline',
+    footerRight:'100% in-browser processing — safe for private files',
+    statusWait:'waiting', statusRun:'processing', statusDone:'done',
+    logLoaded:(name,n)=>`Loaded: "${name}" — ${n} raw page(s)`,
+    logNoImages:'No image files (.jpg/.png/.webp) detected.',
+    logCleared:'Queue cleared.',
+    logStart:(n)=>`Starting to process ${n} chapter(s)…`,
+    logPage:(name,i,total,fmt,mb)=>`${name} · page ${i}/${total} → ${fmt}, ${mb}MB`,
+    logFailed:(name,msg)=>`Failed to process "${name}": ${msg}`,
+    logAllDone:'All chapters processed.',
+    logZipPrep:'Preparing ZIP file…',
+    logZipReady:'ZIP ready to download.',
+  },
+  id: {
+    eyebrow:'Komik7 — Alat Produksi',
+    title:'PENGGABUNG<br>HALAMAN',
+    tagline:'Gabungkan puluhan raw page jadi di bawah 10 halaman siap unggah. Semua proses jalan langsung di browser kamu — tidak ada file yang terkirim ke server manapun.',
+    panel01:'01 — Pengaturan',
+    lblRawPer:'Raw per halaman output',
+    hintRawPer:'Tiap 5 raw digabung jadi 1 halaman',
+    lblMinPages:'Minimal halaman output',
+    hintMinPages:'Jaga-jaga kalau raw sedikit',
+    lblWidth:'Lebar output (px)',
+    hintWidth:'500–800px',
+    lblMaxSize:'Ukuran maks / file (MB)',
+    hintMaxSize:'Quality diturunkan otomatis kalau lebih',
+    lblWebp:'Coba WebP dulu sebelum fallback ke JPEG',
+    panel02:'02 — Input',
+    dropTitle:'Taruh folder chapter di sini',
+    dropDesc:'Struktur: folder "input" berisi folder tiap chapter, isinya file gambar berurutan (001.jpg, 002.jpg, dst)',
+    btnPickFolder:'Pilih Folder Input',
+    btnPickFiles:'Pilih Gambar (1 chapter)',
+    emptyQueue:'Belum ada chapter dimuat.',
+    btnProcess:'▶ Proses Semua Chapter',
+    btnClear:'Bersihkan',
+    panel03:'03 — Hasil',
+    btnDownloadZip:'⬇ Unduh Semua (.zip)',
+    panelLog:'Log',
+    logWaiting:'Menunggu input…',
+    footerLeft:'komik7-bot / komiku.pro pipeline',
+    footerRight:'Proses 100% di browser — aman untuk file privat',
+    statusWait:'menunggu', statusRun:'proses', statusDone:'selesai',
+    logLoaded:(name,n)=>`Dimuat: "${name}" — ${n} raw page`,
+    logNoImages:'Tidak ada file gambar (.jpg/.png/.webp) yang terdeteksi.',
+    logCleared:'Antrian dibersihkan.',
+    logStart:(n)=>`Mulai proses ${n} chapter…`,
+    logPage:(name,i,total,fmt,mb)=>`${name} · halaman ${i}/${total} → ${fmt}, ${mb}MB`,
+    logFailed:(name,msg)=>`Gagal memproses "${name}": ${msg}`,
+    logAllDone:'Semua chapter selesai diproses.',
+    logZipPrep:'Menyiapkan file ZIP…',
+    logZipReady:'ZIP siap diunduh.',
+  }
+};
+
+let currentLang = 'en'; // default: English
+
+function applyLang(lang){
+  currentLang = lang;
+  document.getElementById('htmlRoot').lang = lang;
+  document.getElementById('langEN').classList.toggle('active', lang==='en');
+  document.getElementById('langID').classList.toggle('active', lang==='id');
+  const dict = I18N[lang];
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if(dict[key] !== undefined) el.innerHTML = dict[key];
+  });
+  // re-render dynamic bits that depend on language
+  renderQueue();
+}
+
+document.getElementById('langEN').addEventListener('click', () => applyLang('en'));
+document.getElementById('langID').addEventListener('click', () => applyLang('id'));
+
+/* ─────────────────────────────────────────────────────────
+   State
+───────────────────────────────────────────────────────── */
+let chapters = []; // { name, files: File[], status, outputPages: [{blob, ext, format, sizeMB, w, h}] }
+
+const dropzone   = document.getElementById('dropzone');
+const folderInput= document.getElementById('folderInput');
+const filesInput = document.getElementById('filesInput');
+const chapterList= document.getElementById('chapterList');
+const queueBox   = document.getElementById('queueBox');
+const emptyQueue = document.getElementById('emptyQueue');
+const btnProcess = document.getElementById('btnProcess');
+const btnClear   = document.getElementById('btnClear');
+const btnDownloadZip = document.getElementById('btnDownloadZip');
+const outputPanel= document.getElementById('outputPanel');
+const outputGallery = document.getElementById('outputGallery');
+const logBox     = document.getElementById('logBox');
+
+function log(msg, isErr){
+  const line = document.createElement('div');
+  if(isErr) line.className = 'err';
+  line.textContent = (isErr ? '✕ ' : '› ') + msg;
+  logBox.appendChild(line);
+  logBox.scrollTop = logBox.scrollHeight;
+}
+
+/* ─────────────────────────────────────────────────────────
+   Natural sort (mirrors python's regex split on digits)
+───────────────────────────────────────────────────────── */
+function naturalKey(name){
+  return name.split(/(\d+)/).map(t => /^\d+$/.test(t) ? parseInt(t,10) : t.toLowerCase());
+}
+function naturalCompare(a,b){
+  const ka = naturalKey(a), kb = naturalKey(b);
+  const len = Math.max(ka.length, kb.length);
+  for(let i=0;i<len;i++){
+    const x = ka[i], y = kb[i];
+    if(x === undefined) return -1;
+    if(y === undefined) return 1;
+    if(x === y) continue;
+    if(typeof x === typeof y) return x < y ? -1 : 1;
+    return String(x) < String(y) ? -1 : 1;
+  }
+  return 0;
+}
+
+/* ─────────────────────────────────────────────────────────
+   Input handling: folder picker groups files by top-level
+   chapter subfolder using webkitRelativePath
+───────────────────────────────────────────────────────── */
+const IMG_EXT = /\.(jpe?g|png|webp)$/i;
+
+function addFilesAsChapters(fileList){
+  const grouped = {}; // chapterName -> File[]
+
+  const arr = Array.from(fileList).filter(f => IMG_EXT.test(f.name));
+  if(arr.length === 0){
+    log(I18N[currentLang].logNoImages, true);
+    return;
+  }
+
+  const hasPaths = arr.some(f => f.webkitRelativePath);
+
+  if(hasPaths){
+    for(const f of arr){
+      const parts = f.webkitRelativePath.split('/');
+      let chapterName;
+      if(parts.length >= 3) chapterName = parts[1];       // input/Chapter 1/001.jpg
+      else chapterName = parts[0];                        // Chapter 1/001.jpg
+      (grouped[chapterName] ||= []).push(f);
+    }
+  } else {
+    grouped['Chapter 1'] = arr;
+  }
+
+  for(const name of Object.keys(grouped)){
+    const files = grouped[name].sort((a,b) => naturalCompare(a.name, b.name));
+    chapters.push({ name, files, status:'wait', outputPages:[] });
+    log(I18N[currentLang].logLoaded(name, files.length));
+  }
+
+  renderQueue();
+}
+
+function renderQueue(){
+  if(chapters.length === 0){
+    queueBox.style.display = 'none';
+    emptyQueue.style.display = 'block';
+    btnProcess.disabled = true;
+    btnClear.disabled = true;
+    return;
+  }
+  emptyQueue.style.display = 'none';
+  queueBox.style.display = 'block';
+  btnProcess.disabled = false;
+  btnClear.disabled = false;
+
+  const dict = I18N[currentLang];
+  chapterList.innerHTML = '';
+  chapters.forEach((ch, idx) => {
+    const row = document.createElement('div');
+    row.className = 'chapter-row';
+    const outCount = ch.outputPages.length || estimateOutputPages(ch.files.length);
+    const statusLabel = ch.status === 'wait' ? dict.statusWait : ch.status === 'run' ? dict.statusRun : dict.statusDone;
+    row.innerHTML = `
+      <div>
+        <div class="chapter-name">${ch.name}</div>
+        <div class="chapter-meta">${ch.files.length} raw page(s)</div>
+      </div>
+      <div class="arrow">→ ${outCount}pg</div>
+      <div class="barwrap"><div class="barfill" id="bar-${idx}" style="width:${ch.status==='done'?100:0}%"></div></div>
+      <div class="status-tag ${ch.status}" id="tag-${idx}">${statusLabel}</div>
+    `;
+    chapterList.appendChild(row);
+  });
+}
+
+function estimateOutputPages(rawCount){
+  const rawPer = parseInt(document.getElementById('rawPerPage').value) || 5;
+  const minPages = parseInt(document.getElementById('minPages').value) || 2;
+  if(rawCount <= 0) return 0;
+  return Math.max(minPages, Math.floor(rawCount / rawPer));
+}
+
+/* Dropzone events */
+dropzone.addEventListener('click', () => {});
+document.getElementById('btnPickFolder').addEventListener('click', (e) => { e.stopPropagation(); folderInput.click(); });
+document.getElementById('btnPickFiles').addEventListener('click', (e) => { e.stopPropagation(); filesInput.click(); });
+folderInput.addEventListener('change', (e) => addFilesAsChapters(e.target.files));
+filesInput.addEventListener('change', (e) => addFilesAsChapters(e.target.files));
+
+['dragenter','dragover'].forEach(evt => dropzone.addEventListener(evt, e => {
+  e.preventDefault(); dropzone.classList.add('dragover');
+}));
+['dragleave','drop'].forEach(evt => dropzone.addEventListener(evt, e => {
+  e.preventDefault(); dropzone.classList.remove('dragover');
+}));
+dropzone.addEventListener('drop', async (e) => {
+  const items = e.dataTransfer.items;
+  if(items && items.length && items[0].webkitGetAsEntry){
+    const files = [];
+    const entries = Array.from(items).map(it => it.webkitGetAsEntry()).filter(Boolean);
+    await Promise.all(entries.map(entry => walkEntry(entry, '', files)));
+    addFilesAsChapters(files);
+  } else {
+    addFilesAsChapters(e.dataTransfer.files);
+  }
+});
+
+function walkEntry(entry, prefix, out){
+  return new Promise((resolve) => {
+    if(entry.isFile){
+      entry.file(f => {
+        Object.defineProperty(f, 'webkitRelativePath', { value: prefix + f.name });
+        out.push(f);
+        resolve();
+      }, resolve);
+    } else if(entry.isDirectory){
+      const reader = entry.createReader();
+      const readAll = (acc) => {
+        reader.readEntries(async entries => {
+          if(!entries.length){
+            await Promise.all(acc.map(en => walkEntry(en, prefix + entry.name + '/', out)));
+            resolve();
+          } else {
+            readAll(acc.concat(entries));
+          }
+        }, resolve);
+      };
+      readAll([]);
+    } else resolve();
+  });
+}
+
+btnClear.addEventListener('click', () => {
+  chapters = [];
+  outputGallery.innerHTML = '';
+  outputPanel.style.display = 'none';
+  btnDownloadZip.disabled = true;
+  logBox.innerHTML = '';
+  log(I18N[currentLang].logCleared);
+  renderQueue();
+});
+
+/* ─────────────────────────────────────────────────────────
+   Core stitching logic (mirrors group_to_pages.py)
+───────────────────────────────────────────────────────── */
+function distributeRawToPages(rawCount, outputPages){
+  const base = Math.floor(rawCount / outputPages);
+  const extra = rawCount % outputPages;
+  const groups = [];
+  let start = 0;
+  for(let i=0;i<outputPages;i++){
+    const count = base + (i < extra ? 1 : 0);
+    groups.push([start, count]);
+    start += count;
+  }
+  return groups;
+}
+
+function loadImage(file){
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => { resolve(img); URL.revokeObjectURL(url); };
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+
+async function stitchGroup(files, targetWidth){
+  const imgs = await Promise.all(files.map(loadImage));
+  let totalHeight = 0;
+  const sized = imgs.map(img => {
+    const h = Math.round(img.height * (targetWidth / img.width));
+    totalHeight += h;
+    return { img, h };
+  });
+  const canvas = document.createElement('canvas');
+  canvas.width = targetWidth;
+  canvas.height = totalHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0,0,targetWidth,totalHeight);
+  let y = 0;
+  for(const { img, h } of sized){
+    ctx.drawImage(img, 0, y, targetWidth, h);
+    y += h;
+  }
+  return { canvas, width: targetWidth, height: totalHeight };
+}
+
+function canvasToBlob(canvas, type, quality){
+  return new Promise(resolve => canvas.toBlob(resolve, type, quality));
+}
+
+async function saveOptimized(canvas, maxBytes, enableWebp){
+  if(enableWebp){
+    for(let q = 90; q >= 55; q -= 5){
+      const blob = await canvasToBlob(canvas, 'image/webp', q/100);
+      if(blob && blob.type === 'image/webp' && blob.size <= maxBytes){
+        return { blob, ext:'webp', format:'WEBP', sizeMB: blob.size/1024/1024 };
+      }
+    }
+  }
+  let lastBlob = null, lastQ = 45;
+  for(let q = 85; q >= 45; q -= 5){
+    const blob = await canvasToBlob(canvas, 'image/jpeg', q/100);
+    lastBlob = blob; lastQ = q;
+    if(blob.size <= maxBytes){
+      return { blob, ext:'jpg', format:`JPEG (q${q})`, sizeMB: blob.size/1024/1024 };
+    }
+  }
+  return { blob: lastBlob, ext:'jpg', format:`JPEG (q${lastQ})`, sizeMB: lastBlob.size/1024/1024 };
+}
+
+async function processChapter(ch, idx, settings){
+  const dict = I18N[currentLang];
+  ch.status = 'run';
+  document.getElementById(`tag-${idx}`).className = 'status-tag run';
+  document.getElementById(`tag-${idx}`).textContent = dict.statusRun;
+
+  const rawCount = ch.files.length;
+  const outputPages = Math.max(settings.minPages, Math.floor(rawCount / settings.rawPer));
+  const groups = distributeRawToPages(rawCount, outputPages);
+  const maxBytes = settings.maxSizeMB * 1024 * 1024;
+
+  ch.outputPages = [];
+  for(let i=0;i<groups.length;i++){
+    const [start, count] = groups[i];
+    const groupFiles = ch.files.slice(start, start+count);
+    const { canvas, width, height } = await stitchGroup(groupFiles, settings.outWidth);
+    const result = await saveOptimized(canvas, maxBytes, settings.enableWebp);
+    ch.outputPages.push({ ...result, width, height, index: i+1 });
+
+    const pct = Math.round(((i+1)/groups.length)*100);
+    document.getElementById(`bar-${idx}`).style.width = pct + '%';
+    log(dict.logPage(ch.name, i+1, groups.length, result.format, result.sizeMB.toFixed(2)));
+  }
+
+  ch.status = 'done';
+  document.getElementById(`tag-${idx}`).className = 'status-tag done';
+  document.getElementById(`tag-${idx}`).textContent = dict.statusDone;
+}
+
+btnProcess.addEventListener('click', async () => {
+  const dict = I18N[currentLang];
+  const settings = {
+    rawPer: parseInt(document.getElementById('rawPerPage').value) || 5,
+    minPages: parseInt(document.getElementById('minPages').value) || 2,
+    outWidth: Math.min(800, Math.max(500, parseInt(document.getElementById('outWidth').value) || 800)),
+    maxSizeMB: parseFloat(document.getElementById('maxSize').value) || 3,
+    enableWebp: document.getElementById('enableWebp').checked,
+  };
+
+  btnProcess.disabled = true;
+  btnClear.disabled = true;
+  log(dict.logStart(chapters.length));
+
+  for(let i=0;i<chapters.length;i++){
+    try{
+      await processChapter(chapters[i], i, settings);
+    }catch(err){
+      log(dict.logFailed(chapters[i].name, err.message), true);
+      chapters[i].status = 'wait';
+    }
+  }
+
+  log(dict.logAllDone);
+  renderGallery();
+  btnProcess.disabled = false;
+  btnClear.disabled = false;
+  btnDownloadZip.disabled = false;
+});
+
+/* ─────────────────────────────────────────────────────────
+   Output gallery + zip download
+───────────────────────────────────────────────────────── */
+function renderGallery(){
+  outputPanel.style.display = 'block';
+  outputGallery.innerHTML = '';
+  for(const ch of chapters){
+    if(!ch.outputPages.length) continue;
+    const group = document.createElement('div');
+    group.className = 'chapter-group';
+    group.innerHTML = `<h3>${ch.name} <span>${ch.files.length} raw → ${ch.outputPages.length} pages</span></h3>`;
+    const thumbs = document.createElement('div');
+    thumbs.className = 'thumbs';
+    for(const p of ch.outputPages){
+      const url = URL.createObjectURL(p.blob);
+      const div = document.createElement('div');
+      div.className = 'thumb';
+      div.innerHTML = `<img src="${url}" loading="lazy"><div class="badge"><span>${p.index}.${p.ext}</span><span>${p.sizeMB.toFixed(1)}MB</span></div>`;
+      thumbs.appendChild(div);
+    }
+    group.appendChild(thumbs);
+    outputGallery.appendChild(group);
+  }
+}
+
+btnDownloadZip.addEventListener('click', async () => {
+  const dict = I18N[currentLang];
+  log(dict.logZipPrep);
+  const zip = new JSZip();
+  for(const ch of chapters){
+    if(!ch.outputPages.length) continue;
+    const folder = zip.folder(ch.name);
+    for(const p of ch.outputPages){
+      folder.file(`${p.index}.${p.ext}`, p.blob);
+    }
+  }
+  const blob = await zip.generateAsync({ type:'blob' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'output.zip';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  log(dict.logZipReady);
+});
+
+/* init: default language is English */
+applyLang('en');
+</script>
+</body>
+</html>
