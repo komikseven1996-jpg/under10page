@@ -1,12 +1,48 @@
 <!DOCTYPE html>
 <html lang="en" id="htmlRoot">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Page Grouper — Komik7</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <!-- Character encoding & responsive scaling — required basics -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Browser tab title -->
+  <title>Under10Page — Free Manga/Webtoon Page Grouper | Komiku</title>
+
+  <!-- Shown under the title in Google search results -->
+  <meta name="description" content="Combine dozens of raw manga/webtoon pages into fewer than 10 clean upload-ready pages. 100% free, runs in your browser — no upload, no server, no signup.">
+
+  <!-- Helps search engines rank for the right terms -->
+  <meta name="keywords" content="manga page grouper, webtoon stitcher, combine manga pages, scanlation tool, free comic tool">
+
+  <!-- Tells Google this is a real page you want indexed (opposite of noindex) -->
+  <meta name="robots" content="index, follow">
+
+  <!-- The "official" URL of this page — prevents duplicate-content issues if someone links with ?params or a trailing slash -->
+  <link rel="canonical" href="https://under10page.komiku.pro/">
+
+  <!-- Icons shown in browser tabs, bookmarks, and when saved to a phone home screen -->
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="/favicon.png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+  <!-- ===== Open Graph — controls the preview card when shared on WhatsApp/Telegram/Discord/Facebook ===== -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Under10Page — Free Manga/Webtoon Page Grouper">
+  <meta property="og:description" content="Turn dozens of raw pages into a clean, compressed set of upload-ready pages. Free, browser-based, no upload needed.">
+  <meta property="og:image" content="https://under10page.komiku.pro/og-image.jpg">
+  <meta property="og:url" content="https://under10page.komiku.pro/">
+  <meta property="og:site_name" content="Komiku">
+
+  <!-- ===== Twitter/X card — same idea, but for X's own preview renderer ===== -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Under10Page — Free Manga/Webtoon Page Grouper">
+  <meta name="twitter:description" content="Combine raw pages into fewer, cleaner upload-ready pages — free and browser-based.">
+  <meta name="twitter:image" content="https://under10page.komiku.pro/og-image.jpg">
+
+  <!-- Fonts + JSZip library used by the tool -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
   :root{
     --glass:rgba(255,255,255,0.10);
@@ -208,8 +244,8 @@
 
   <header>
     <div class="brand">
-      <span class="eyebrow" data-i18n="eyebrow">Komik7 — Production Tool</span>
-      <h1 data-i18n="title">PAGE<br>GROUPER</h1>
+      <span class="eyebrow" data-i18n="eyebrow">Komiku.pro — Free Tool</span>
+      <h1 data-i18n="title">UNDER<br>10PAGE</h1>
     </div>
     <div class="headright">
       <div class="langtoggle">
@@ -313,8 +349,8 @@
 ───────────────────────────────────────────────────────── */
 const I18N = {
   en: {
-    eyebrow:'Komik7 — Production Tool',
-    title:'PAGE<br>GROUPER',
+    eyebrow:'Komiku.pro — Free Tool',
+    title:'UNDER<br>10PAGE',
     tagline:'Combine dozens of raw pages into fewer than 10 upload-ready pages. Everything runs right in your browser — no files are sent to any server.',
     panel01:'01 — Settings',
     lblRawPer:'Raw pages per output page',
@@ -352,8 +388,8 @@ const I18N = {
     logZipReady:'ZIP ready to download.',
   },
   id: {
-    eyebrow:'Komik7 — Alat Produksi',
-    title:'PENGGABUNG<br>HALAMAN',
+    eyebrow:'Komiku.pro — Alat Gratis',
+    title:'UNDER<br>10PAGE',
     tagline:'Gabungkan puluhan raw page jadi di bawah 10 halaman siap unggah. Semua proses jalan langsung di browser kamu — tidak ada file yang terkirim ke server manapun.',
     panel01:'01 — Pengaturan',
     lblRawPer:'Raw per halaman output',
