@@ -189,7 +189,14 @@ def save_optimized_image(image: Image.Image, base_path: Path):
         webp_path = base_path.with_suffix('.webp')
         # Coba WebP dari quality tinggi turun bertahap
         for q in range(WEBP_QUALITY_START, 50, -5):  # 90, 85, 80, ... 55
-            image.save(webp_path, 'WEBP', quality=q)
+            try:
+                image.save(webp_path, 'WEBP', quality=q)
+            except (ValueError, OSError) as e:
+                # WebP gagal total (misal gambar > 16383px height limit)
+                # → hapus file jika ada, lalu fallback ke JPEG
+                if webp_path.exists():
+                    webp_path.unlink()
+                break
             size = webp_path.stat().st_size
             if size <= max_bytes:
                 # WebP cocok! 
